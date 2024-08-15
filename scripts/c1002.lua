@@ -9,4 +9,3 @@ function s.initial_effect(c)
 	e1:SetValue(TYPE_SPELL)
 	c:RegisterEffect(e1)
 end
-s.listed_names={id}
