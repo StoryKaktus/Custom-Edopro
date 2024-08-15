@@ -18,10 +18,12 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	local e3=Effect.CreateEffect(c)
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
-	e3:SetType(EFFECT_TYPE_IGNITION)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetTargetRange(LOCATION_MZONE+LOCATION_GRAVE)
+	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e3:SetCountLimit(1,{id,1})
+	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_SZONE)
-	e3:SetCondition(s.spcon)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
@@ -41,27 +43,22 @@ function s.fgop(e,tp,eg,ep,ev,re,r,rp)
 	c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET,0,1)
 end
 function s.decktargets(c,tp)
-	return c:IsAbleToDeck() and (ft>0 or c:IsInMainMZone() or c:IsInGrave()) and c:IsType(TYPE_TUNER)
+	return (c:IsAbleToDeck() or c:IsAbleToExtra()) and c:IsType(TYPE_TUNER) and c:IsFaceup()
+		and Duel.GetMZoneCount(tp,c)>0
 end
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.spcfilter,1,e:GetHandler(),tp)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE|LOCATION_GRAVE) and chkc:IsControler(tp) and s.tdfilter(chkc,tp) end
 	local c=e:GetHandler()
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,LOCATION_SZONE)
+	if chk==0 then return Duel.IsExistingTarget(s.tdfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,nil,tp)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local g=Duel.SelectTarget(tp,s.tdfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,1,nil,tp)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,1,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
 end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
+function s.tdop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if not tc:IsRelateToEffect(e) or Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)==0
+		or not tc:IsLocation(LOCATION_EXTRA+LOCATION_DECK) then return end
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-		local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) and Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)>0
-		and tc:IsLocation(LOCATION_DECK+LOCATION_EXTRA) and e:GetLabel()==1 and Duel.IsPlayerCanDraw(tp,1)
-		and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		Duel.BreakEffect()
-		if tc:IsLocation(LOCATION_DECK) and tc:IsControler(tp) then
-			Duel.ShuffleDeck(tp)
-		end
-	end
 end
