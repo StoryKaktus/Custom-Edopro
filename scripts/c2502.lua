@@ -1,6 +1,6 @@
 --Faye of the White Forest
 
-local s,id=GetID()
+local s,id=c2502
 function s.initial_effect(c)
 	--Set itself into S/T zones as a spell
 	local e1=Effect.CreateEffect(c)
