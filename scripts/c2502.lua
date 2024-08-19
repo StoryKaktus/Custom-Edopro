@@ -42,7 +42,7 @@ function s.fgop(e,tp,eg,ep,ev,re,r,rp)
 	c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET,0,1)
 end
 function s.decktargets(c,tp)
-	return (c:IsAbleToDeck() or c:IsAbleToExtra()) and c:IsType(TYPE_TUNER) and c:IsFaceup()
+	return c:IsAbleToDeckOrExtraAsCost and c:IsType(TYPE_TUNER) and c:IsFaceup()
 		and Duel.GetMZoneCount(tp,c)>0
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
